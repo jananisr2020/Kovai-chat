@@ -1,0 +1,17 @@
+import { useEffect, useState } from 'react';
+import { ArrowRight, MapPin, Search, UtensilsCrossed } from 'lucide-react';
+type Restaurant = { id: number; name: string; area: string; description: string; is_open: boolean };
+const API = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\\/$/, '');
+export default function App() {
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [query, setQuery] = useState('');
+  useEffect(() => { fetch(`${API}/v1/restaurants`).then(r => { if (!r.ok) throw new Error('Could not load restaurants'); return r.json(); }).then(setRestaurants).catch(() => setError('We could not reach the food network just now. Please try again shortly.')).finally(() => setLoading(false)); }, []);
+  const visible = restaurants.filter(r => `${r.name} ${r.area}`.toLowerCase().includes(query.toLowerCase()));
+  return <main><nav className="nav"><a className="brand" href="#top"><span className="brand-icon"><UtensilsCrossed size={20}/></span> kovai<span>chaat.</span></a><a className="nav-link" href="#discover">Explore food <ArrowRight size={16}/></a></nav>
+    <section className="hero" id="top"><div className="hero-copy"><p className="eyebrow">COIMBATORE'S STREET FOOD, REIMAGINED</p><h1>Your cravings.<br/><em>Our streets.</em></h1><p className="intro">From spicy chaat to local street-food favourites, discover the flavours of Kovai — delivered by our own local delivery team.</p><a className="primary" href="#discover">Find your next bite <ArrowRight size={18}/></a><div className="local-note"><MapPin size={15}/> Starting in Coimbatore</div></div><div className="hero-art"><div className="sun"></div><div className="food-card"><div className="food-emoji">🥙</div><div className="food-caption">GOOD FOOD, KOVAI STYLE</div></div><span className="doodle d1">✳</span><span className="doodle d2">✦</span><span className="doodle d3">●</span></div></section>
+    <section className="discover" id="discover"><div className="section-head"><div><p className="eyebrow">THE GOOD STUFF</p><h2>Find food around you.</h2></div><label className="search"><Search size={18}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search restaurants or areas"/></label></div>
+      {loading ? <p className="state">Finding local favourites…</p> : error ? <div className="state error">{error}<button onClick={()=>location.reload()}>Try again</button></div> : visible.length === 0 ? <div className="state">{restaurants.length === 0 ? 'We are onboarding our first restaurant partners. Check back soon!' : 'No restaurants match that search.'}</div> : <div className="restaurant-grid">{visible.map(r=><article className="restaurant" key={r.id}><div className="restaurant-art">🍲</div><div className="restaurant-info"><div className="area"><MapPin size={13}/>{r.area}</div><h3>{r.name}</h3><p>{r.description || 'Local street-food favourites, made fresh.'}</p><span className={r.is_open?'open':'closed'}>{r.is_open?'Open now':'Currently closed'}</span></div></article>)}</div>}
+    </section><footer><a className="brand" href="#top">kovai<span>chaat.</span></a><p>Made for the streets of Coimbatore. ❤️</p></footer></main>;
+}
